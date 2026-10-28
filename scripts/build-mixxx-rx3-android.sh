@@ -39,8 +39,18 @@ export BUILDENV_BASEPATH="$work/buildenv"
 if [ "${RX3_ANDROID_SKIP_SETUP:-0}" != 1 ]; then
   # This is a source operation: the setup script exports the exact vcpkg
   # triplet, SDK and dependency URL required by the current Mixxx guide.
+  # Mixxx 2.5.6 predates the Android guide and does not ship this helper.
+  # Keep the application source pinned, but use the official current helper.
+  android_env="$source_tree/tools/android_buildenv.sh"
+  if [ ! -f "$android_env" ]; then
+    android_env="$work/android_buildenv.sh"
+    curl --fail --location --retry 3 \
+      https://raw.githubusercontent.com/mixxxdj/mixxx/main/tools/android_buildenv.sh \
+      -o "$android_env"
+    chmod +x "$android_env"
+  fi
   set +u
-  source "$source_tree/tools/android_buildenv.sh" setup
+  source "$android_env" setup
   set -u
 fi
 if [ -n "${BUILDENV_URL:-}" ] && [ -n "${BUILDENV_SHA256:-}" ]; then
