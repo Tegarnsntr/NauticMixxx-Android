@@ -1,0 +1,39 @@
+name: NauticMixxx Android APK
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ['android-*']
+
+permissions:
+  contents: read
+
+jobs:
+  apk:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create CI signing key
+        run: |
+          keytool -genkeypair \
+            -keystore "$RUNNER_TEMP/mixxx.keystore" \
+            -alias mixxx \
+            -keyalg RSA -keysize 2048 -validity 1 \
+            -storepass android -keypass android \
+            -dname "CN=NauticMixxx CI"
+          {
+            echo "QT_ANDROID_KEYSTORE_ALIAS=mixxx"
+            echo "QT_ANDROID_KEYSTORE_KEY_PASS=android"
+            echo "QT_ANDROID_KEYSTORE_PATH=$RUNNER_TEMP/mixxx.keystore"
+            echo "QT_ANDROID_KEYSTORE_STORE_PASS=android"
+          } >> "$GITHUB_ENV"
+      - name: Build Android APK
+        env:
+          RX3_BUILD_JOBS: 2
+        run: bash scripts/build-mixxx-rx3-android.sh
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: NauticMixxx-Android
+          path: build/android-*/build/android-build/build/outputs/apk/release/*-signed.apk
+          if-no-files-found: error
