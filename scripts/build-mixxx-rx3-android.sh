@@ -70,6 +70,15 @@ if [ -z "$toolchain" ]; then
   exit 1
 fi
 
+# Android cross compilation still runs Mixxx's configure-time host checks.
+# Install the Debian development packages requested by that check before CMake.
+debian_env="$source_tree/tools/debian_buildenv.sh"
+if [ -f "$debian_env" ] && [ "${RX3_ANDROID_SKIP_DEBIAN_SETUP:-0}" != 1 ]; then
+  set +u
+  source "$debian_env" setup
+  set -u
+fi
+
 # Branding must be applied before Qt compiles its resource collection.
 python3 "$project/packaging/linux/prepare-branding.py" "$source_tree" "$project"
 cmake -S "$source_tree" -B "$work/build" -G Ninja \
