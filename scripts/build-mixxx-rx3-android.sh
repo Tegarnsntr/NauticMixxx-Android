@@ -59,9 +59,17 @@ if [ -n "${BUILDENV_URL:-}" ] && [ -n "${BUILDENV_SHA256:-}" ]; then
   if [ ! -f "$buildenv_zip" ]; then
     # The Android dependency archive is ~3.4 GB. Resume partial downloads and
     # fail/retry when the runner connection becomes effectively stalled.
-    curl --fail --location --continue-at - --retry 20 --retry-all-errors \
-      --connect-timeout 30 --speed-limit 100000 --speed-time 60 \
-      "$BUILDENV_URL" -o "$buildenv_zip"
+    if command -v aria2c >/dev/null 2>&1; then
+      aria2c --continue=true --max-connection-per-server=16 \
+        --split=16 --min-split-size=10M --file-allocation=none \
+        --max-tries=20 --retry-wait=5 --timeout=60 \
+        --out="$(basename "$buildenv_zip")" --dir="$(dirname "$buildenv_zip")" \
+        "$BUILDENV_URL"
+    else
+      curl --fail --location --continue-at - --retry 20 --retry-all-errors \
+        --connect-timeout 30 --speed-limit 100000 --speed-time 60 \
+        "$BUILDENV_URL" -o "$buildenv_zip"
+    fi
   fi
   printf '%s  %s\n' "$BUILDENV_SHA256" "$buildenv_zip" | sha256sum -c -
   if [ ! -d "$MIXXX_VCPKG_ROOT" ]; then unzip -q "$buildenv_zip" -d "$BUILDENV_BASEPATH"; fi
