@@ -84,6 +84,8 @@ python3 "$project/packaging/linux/prepare-branding.py" "$source_tree" "$project"
 cmake -S "$source_tree" -B "$work/build" -G Ninja \
   -DCMAKE_BUILD_TYPE=Release -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
   -DCMAKE_SYSTEM_NAME=Android -DCMAKE_TOOLCHAIN_FILE="$toolchain" \
+  -DVCPKG_TARGET_TRIPLET="${VCPKG_TARGET_TRIPLET:-arm64-android}" \
+  -DANDROID_ABI=arm64-v8a -DCMAKE_ANDROID_ARCH_ABI=arm64-v8a \
   -DCMAKE_INSTALL_PREFIX="$work/stage" -DNAUTICMIX_VERSION="$version" \
   -DQT6=ON -DQML=OFF -DAU_EFFECTS=OFF -DENGINEPRIME=OFF \
   -DKEYFINDER=OFF -DBUILD_TESTING=OFF -DBUILD_BENCH=OFF
